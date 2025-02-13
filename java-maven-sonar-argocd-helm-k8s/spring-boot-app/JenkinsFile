@@ -3,8 +3,6 @@ pipeline {
     environment {
         DOCKER_IMAGE = "rudraiah72/ultimate-cicd:${BUILD_NUMBER}"
         SONAR_URL = "http://13.201.54.213:9000"
-        DOCKER_USERNAME = 'rudraiah72' 
-        DOCKER_PASSWORD = 'Rudra@423' 
     }
     stages {
         stage('Checkout') {
@@ -36,21 +34,23 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    // Log in to Docker Hub
-                    sh sudo 'echo $DOCKER_PASSWORD | sudo docker login -u $DOCKER_USERNAME --password-stdin'
-                    
-                    // Build the Docker image
-                    sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && sudo docker build -t ${DOCKER_IMAGE} .'
-                    
-                    // Push the Docker image
-                    sh 'sudo docker push ${DOCKER_IMAGE}'
-                    
-                    // Optionally, tag and push the image as 'latest'
-                    sh 'sudo docker tag ${DOCKER_IMAGE} ${DOCKER_IMAGE}:latest'
-                    sh 'sudo docker push ${DOCKER_IMAGE}:latest'
-                    
-                    // Log out from Docker Hub
-                    sh 'docker logout'
+                    withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        // Log in to Docker Hub
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                        
+                        // Build the Docker image
+                        sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && docker build -t ${DOCKER_IMAGE} .'
+                        
+                        // Push the Docker image
+                        sh 'docker push ${DOCKER_IMAGE}'
+                        
+                        // Optionally, tag and push the image as 'latest'
+                        sh 'docker tag ${DOCKER_IMAGE} ${DOCKER_USERNAME}/ultimate-cicd:latest'
+                        sh 'docker push ${DOCKER_USERNAME}/ultimate-cicd:latest'
+                        
+                        // Log out from Docker Hub
+                        sh 'docker logout'
+                    }
                 }
             }
         }
