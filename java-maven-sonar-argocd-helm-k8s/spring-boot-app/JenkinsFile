@@ -1,11 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'your-image-name'
-            registryUrl 'https://your-registry-url'
-            registryCredentialsId 'docker-cred'
-        }
-    }
+    agent any
     stages {
         stage('Checkout') {
             steps {
